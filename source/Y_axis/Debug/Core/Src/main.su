@@ -1,0 +1,14 @@
+main.c:87:5:main	72	static
+main.c:197:6:SystemClock_Config	128	static
+main.c:250:13:MX_ADC1_Init	48	static
+main.c:318:13:MX_GPIO_Init	48	static
+main.c:345:9:getCalFlashSlot	24	static
+main.c:360:6:calibration	88	static
+main.c:439:6:draw5	16	static
+main.c:463:6:drawInf	16	static
+main.c:487:6:writeToFlash	24	static,ignoring_inline_asm
+main.c:503:6:eraseFlash	8	static
+main.c:518:10:getValue	16	static
+main.c:526:6:rotateLeft	24	static
+main.c:537:6:rotateRight	24	static
+main.c:553:6:Error_Handler	8	static

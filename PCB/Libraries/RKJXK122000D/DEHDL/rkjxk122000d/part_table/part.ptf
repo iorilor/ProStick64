@@ -1,0 +1,11 @@
+FILE_TYPE = MULTI_PHYS_TABLE;
+
+PART 'RKJXK122000D'
+CLASS = DISCRETE
+{========================================================================================}
+:"MANUFACTURER_NAME", "MANUFACTURER_PART_NUMBER"= "PART_NUMBER", "JEDEC_TYPE", "PACK_TYPE", "MOUSER_PART_NUMBER", "MOUSER_PRICE/STOCK", "RS_PART_NUMBER", "RS_PRICE/STOCK", "DESCRIPTION", "DATASHEET", "HEIGHT";
+{========================================================================================}
+ "ALPS", "RKJXK122000D" (!) = "", "RKJXK122000D", "Other", "688-RKJXK122000D", "https://www.mouser.co.uk/ProductDetail/ALPS/RKJXK122000D?qs=m0BA540hBPe588JnPdeybQ%3D%3D", "", "", "Miniature potentiomeric joystick Joystick Switch Through Hole, -10 ??? +70degC", "http://www.alps.com/products/WebObjects/catalog.woa/E/HTML/MultiControl/Potentiometer/RKJXK/RKJXK122000D.html.pdf", "19.7 mm"
+END_PART
+
+END.

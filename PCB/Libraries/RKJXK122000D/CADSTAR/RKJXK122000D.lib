@@ -1,0 +1,19 @@
+.RKJXK122000D :1 ;Miniature potentiomeric joystick Joystick Switch Through Hole, -10 ??? +70degC
+RKJXK122000D
+*STM S
+*NGS
+*PNM 1=11 2=12 3=21 4=22 5=31 6=32 7=A1 8=B1 9=C1 10=D1 11=MH1 12=MH2 13=MH3 14=MH4
+*PLB 1="11" 2="12" 3="21" 4="22" 5="31" 6="32" 7="A1" 8="B1" 9="C1" 10="D1" 11="MH1" 12="MH2" 13="MH3" 14="MH4"
+*MXP 14
+*DFN RKJXK122000D
+~!Manufacturer_Name (ALPS)
+~!Manufacturer_Part_Number (RKJXK122000D)
+~!Mouser Part Number (688-RKJXK122000D)
+~!Link Mouser Price/Stock (https://www.mouser.co.uk/ProductDetail/ALPS/RKJXK122000D?qs=m0BA540hBPe588JnPdeybQ%3D%3D)
+~!RS Part Number (-)
+~!RS Price/Stock (-)
+~!Link Datasheet (http://www.alps.com/products/WebObjects/catalog.woa/E/HTML/MultiControl/Potentiometer/RKJXK/RKJXK122000D.html.pdf)
+~!Height (19.7mm)
+~!3D_Model (RKJXK122000D)
+RKJXK122000D
+1.1!U 2.1!U 3.1!U 4.1!U 5.1!U 6.1!U 7.1!U 8.1!U 9.1!U 10.1!U 11.1!U 12.1!U 13.1!U 14.1!U 

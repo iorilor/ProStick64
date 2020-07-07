@@ -1,0 +1,14 @@
+main - Copy.c:85:5:main	72	static
+main - Copy.c:174:6:SystemClock_Config	128	static
+main - Copy.c:227:13:MX_ADC1_Init	48	static
+main - Copy.c:295:13:MX_GPIO_Init	48	static
+main - Copy.c:322:9:getCalFlashSlot	24	static
+main - Copy.c:337:6:calibration	88	static
+main - Copy.c:406:6:draw5	16	static
+main - Copy.c:430:6:drawInf	16	static
+main - Copy.c:454:6:writeToFlash	24	static,ignoring_inline_asm
+main - Copy.c:470:6:eraseFlash	8	static
+main - Copy.c:485:10:getValue	16	static
+main - Copy.c:493:6:rotateLeft	24	static
+main - Copy.c:504:6:rotateRight	24	static
+main - Copy.c:520:6:Error_Handler	8	static
