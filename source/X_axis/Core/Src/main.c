@@ -81,6 +81,7 @@ void 		  eraseFlash 		  (void);
 uint16_t 	getValue		    (void);
 void 		  rotateLeft 		  (volatile uint32_t*);
 void 		  rotateRight 	  (volatile uint32_t*);
+void      swdioInput      (void);
 
 /* USER CODE END PFP */
 
@@ -380,20 +381,36 @@ int16_t getCalFlashSlot(void){
 	}
 	return i;
 }
-//Calibration 2.0
+//Calibration 3.0
 void calibration(uint8_t calSw, uint8_t calFlashSlot){
 
 //PHASE 1 - Calculating neutral value
 uint32_t 	value32=0, i=0, j=0, neutral32=0, w1=0xFFFFFFFF,w2=0xFFFFFFFF;
 uint16_t 	value16=0, count=0, neutralAverage=0, neutralAverageOld=0;
-uint16_t  max=0, min=0;
+uint16_t  max=0, min=0, MCU_OK=0;
 uint16_t 	w1a=0xFFFF, w1b=0xFFFF, w2a=0xFFFF, w2b=0xFFFF;
 uint8_t		neutralOK=0;
 float			calFactA=0.0, calFactB=0.0;
 
- HAL_Delay(5000);
+HAL_Delay(5000);
 
-draw(5);
+swdioInput();
+
+//Set GPIOA_PIN11 and PIN12 HIGH to communicate that MCU is ready to proceed
+*GPIOA_ODR = (*GPIOA_ODR & 0xFFFF0000) + 0x1800;
+
+//Wait until GPIOA_PIN13 becomes 1 - both MCUs are ready to proceed
+while (!MCU_OK){
+  MCU_OK = (uint16_t)(*GPIOA_IDR) & 0x2000;
+}
+
+HAL_Delay(100);
+
+//The next line reconfigures the output register with the bit wheel
+*GPIOA_ODR = (*GPIOA_ODR & 0xFFFF0000) + 0x6600;
+
+MCU_OK = 0;
+draw(3);
 
 value16 = getValue();
 
@@ -421,7 +438,21 @@ while (neutralOK<3){
 	else neutralOK = 0;
 	neutralAverageOld = neutralAverage;
 }
-draw(5);
+//Set GPIOA_PIN11 and PIN12 HIGH to communicate that MCU is ready to proceed
+*GPIOA_ODR = (*GPIOA_ODR & 0xFFFF0000) + 0x1800;
+
+//Wait until GPIOA_PIN13 becomes 1 - both MCUs are ready to proceed
+while (!MCU_OK){
+  MCU_OK = (uint16_t)(*GPIOA_IDR) & 0x2000;
+}
+
+HAL_Delay(100);
+
+//The next line reconfigures the output register with the bit wheel
+*GPIOA_ODR = (*GPIOA_ODR & 0xFFFF0000) + 0x6600;
+
+MCU_OK = 0;
+draw(3);
 //PHASE 2 - Calculating min and max while the stick is rotated
 min = neutralAverage;
 max = neutralAverage;
@@ -458,6 +489,21 @@ w2b = (uint16_t)(calFactB * 10000);
 w1 = ((uint32_t)w1a << 16) + w1b;
 w2 = ((uint32_t)w2a << 16) + w2b;
 writeToFlash(w1, w2, calFlashSlot);
+
+//Set GPIOA_PIN11 and PIN12 HIGH to communicate that MCU is ready to proceed
+*GPIOA_ODR = (*GPIOA_ODR & 0xFFFF0000) + 0x1800;
+
+//Wait until GPIOA_PIN13 becomes 1 - both MCUs are ready to proceed
+while (!MCU_OK){
+  MCU_OK = (uint16_t)(*GPIOA_IDR) & 0x2000;
+}
+
+HAL_Delay(100);
+
+//The next line reconfigures the output register with the bit wheel
+*GPIOA_ODR = (*GPIOA_ODR & 0xFFFF0000) + 0x6600;
+
+MCU_OK = 0;
 draw(-1);
 }
 
@@ -574,6 +620,15 @@ void rotateRight (volatile uint32_t* GPIOA_ODR){
 		result = (data>>1);
 	}
 	*GPIOA_ODR = (*GPIOA_ODR & 0xFFFF00FF) + ((uint16_t)result << 8);
+}
+
+//Configure SWDIO pin (GPIOA_PIN13) as input
+void swdioInput (void){
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  GPIO_InitStruct.Pin  = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 /* USER CODE END 4 */
 
