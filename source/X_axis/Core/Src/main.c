@@ -2,12 +2,13 @@
 /**
   ******************************************************************************
   * @file           : main.c
-  * @brief          : Main program body - X axis
+  * @brief          : Main program body for X axis processor
   ******************************************************************************
-  * @attention
+  ******************************************************************************
+  * All the code OUTSIDE the "USER CODE" blocks is copyrighted as follows:
   *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
-  * All rights reserved.</center></h2>
+  * Copyright (c) 2020 STMicroelectronics
+  * All rights reserved
   *
   * This software component is licensed by ST under BSD 3-Clause license,
   * the "License"; You may not use this file except in compliance with the
@@ -15,8 +16,23 @@
   *                        opensource.org/licenses/BSD-3-Clause
   *
   ******************************************************************************
-  ****** Software developed by Lorenzo Iori, all rights reserved. **************
-  ******************************************************************************
+  *
+  * All the code INSIDE the "USER CODE" blocks is copyrighted as follows:
+  *
+  * Copyright (c) 2020 Lorenzo Iori
+  *
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
   */
 /* USER CODE END Header */
 
@@ -35,9 +51,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define MAX_RANGE 		90			//Maximum number of steps in every direction. OEM is 90
-#define MAX_RANGE_EXT	120			//Maximum number of steps in every direction when ext mode is enabled. Default is 120
-#define DEADZONE 		250			//Area that will be ignored (0-2048)
+#define MAX_RANGE     90			//Maximum number of steps in every direction
+#define MAX_RANGE_EXT 120			//Maximum number of steps in every direction (ext)
+#define DEADZONE      250			//Area that will be ignored (0-2048)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -57,27 +73,26 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_ADC1_Init(void);
 /* USER CODE BEGIN PFP */
-uint8_t 	getCalFlashSlot	(uint8_t);
-void 		calibration		(uint8_t, uint8_t);
-void 		draw5			(void);
-void 		drawInf			(void);
-void 		writeToFlash	(uint32_t, uint32_t, uint8_t);
-void 		eraseFlash 		(void);
-uint16_t 	getValue		(void);
-void 		rotateLeft 		(volatile uint32_t*);
-void 		rotateRight 	(volatile uint32_t*);
+int16_t   getCalFlashSlot	(void);
+void 		  calibration		  (uint8_t, uint8_t);
+void 		  draw			      (int16_t);
+void 		  writeToFlash	  (uint32_t, uint32_t, uint8_t);
+void 		  eraseFlash 		  (void);
+uint16_t 	getValue		    (void);
+void 		  rotateLeft 		  (volatile uint32_t*);
+void 		  rotateRight 	  (volatile uint32_t*);
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-volatile uint32_t* FLASH_SR  	= (uint32_t*)0x40022010;				//MEMORY ADDRESSES
-volatile uint32_t* FLASH_CR  	= (uint32_t*)0x40022014;
+volatile uint32_t* FLASH_SR  	  = (uint32_t*)0x40022010;  //MEMORY ADDRESSES
+volatile uint32_t* FLASH_CR  	  = (uint32_t*)0x40022014;
 volatile uint32_t* PAGE15_SLOT1 = (uint32_t*)0x08007800;
-volatile uint32_t* GPIOA_IDR 	= (uint32_t*)0x50000010;
-volatile uint32_t* GPIOA_ODR 	= (uint32_t*)0x50000014;
-volatile uint32_t* ADC_ISR 		= (uint32_t*)0x40012400;
-volatile uint32_t* ADC_DR 		= (uint32_t*)0x40012440;
+volatile uint32_t* GPIOA_IDR 	  = (uint32_t*)0x50000010;
+volatile uint32_t* GPIOA_ODR 	  = (uint32_t*)0x50000014;
+volatile uint32_t* ADC_ISR 		  = (uint32_t*)0x40012400;
+volatile uint32_t* ADC_DR 		  = (uint32_t*)0x40012440;
 /* USER CODE END 0 */
 
 /**
@@ -92,7 +107,7 @@ int main(void)
 
   /* MCU Configuration--------------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  /*Reset of all peripherals, Initializes the Flash interface and the Systick.*/
   HAL_Init();
 
   /* USER CODE BEGIN Init */
@@ -111,11 +126,21 @@ int main(void)
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
   HAL_ADC_Start(&hadc1);
-  *GPIOA_ODR = (*GPIOA_ODR & 0xFFFF0000) + 0x6600;					//Configure the output register with the bit wheel
-  uint16_t calSwRead = (uint16_t)(*GPIOA_IDR) & 0x1;				//calSw = GPIOA_PIN0 status
+  //The next line configures the output register with the bit wheel
+  *GPIOA_ODR = (*GPIOA_ODR & 0xFFFF0000) + 0x6600;
+  uint16_t calSwRead = (uint16_t)(*GPIOA_IDR) & 0x1; //calSw = GPIOA_PIN0 status
   uint8_t  calSw = 0;
   if (calSwRead) calSw = 1;
-  uint8_t 	calFlashSlot = getCalFlashSlot(calSw);
+  int16_t 	calFlashSlot = getCalFlashSlot();
+
+  //If getCalFlashSlot returns -1 it means there is no calibration data stored
+  if (calFlashSlot == -1) calibration(calSw, 0);
+
+  //If it returns 255 it means the memory is full. Erase + calibration needed.
+  if (calFlashSlot == 255){
+    eraseFlash();
+    calibration(calSw, 0);
+  }
   uint32_t 	w1 = *(PAGE15_SLOT1 + ((calFlashSlot)*2));
   uint32_t 	w2 = *(PAGE15_SLOT1 + ((calFlashSlot)*2) + 1);
   uint16_t 	w1a = (uint16_t)(w1>>16);
@@ -126,7 +151,7 @@ int main(void)
   uint8_t  	calSwOld = (uint8_t)(w1a >> 15);
   if (calSwOld != calSw){
   	calFlashSlot++;
-    	calibration(calSw, calFlashSlot);
+    calibration(calSw, (uint8_t)calFlashSlot);
   }
   float    	calFactA = (float)calFactAInt / 10000;
   float    	calFactB = (float)calFactBInt / 10000;
@@ -200,10 +225,10 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
-  /** Configure the main internal regulator output voltage 
+  /** Configure the main internal regulator output voltage
   */
   HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB busses clocks
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -220,7 +245,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB busses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1;
@@ -232,7 +257,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  /** Initializes the peripherals clocks 
+  /** Initializes the peripherals clocks
   */
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
   PeriphClkInit.AdcClockSelection = RCC_ADCCLKSOURCE_SYSCLK;
@@ -260,7 +285,9 @@ static void MX_ADC1_Init(void)
   /* USER CODE BEGIN ADC1_Init 1 */
 
   /* USER CODE END ADC1_Init 1 */
-  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
+  /*
+    Configure the global features of the ADC
+    (Clock, Resolution, Data Alignment and number of conversion)
   */
   hadc1.Instance = ADC1;
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
@@ -288,14 +315,14 @@ static void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
-  /** Configure Analog WatchDog 2 
+  /** Configure Analog WatchDog 2
   */
   AnalogWDGConfig.WatchdogMode = ADC_ANALOGWATCHDOG_SINGLE_REG;
   if (HAL_ADC_AnalogWDGConfig(&hadc1, &AnalogWDGConfig) != HAL_OK)
   {
     Error_Handler();
   }
-  /** Configure Regular Channel 
+  /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_11;
   sConfig.Rank = ADC_REGULAR_RANK_1;
@@ -342,61 +369,59 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-uint8_t getCalFlashSlot(uint8_t calSw){			//Finds the FLASH memory slot currently in use
-	uint16_t i = 0;
+
+//Find the FLASH memory slot currently in use
+int16_t getCalFlashSlot(void){
+	int16_t i = -1;
 	uint32_t data = *PAGE15_SLOT1;
-	while (((data != 0xFFFFFFFF) && i < 256)){
+	while (((data != 0xFFFFFFFF) && i < 255)){
 		i++;
 		data = *(PAGE15_SLOT1 + i*2);
 	}
-	if(i == 0) calibration(calSw, 0);
-	if(i == 256){						//erase flash if it's full
-			eraseFlash();
-			calibration(calSw, 0);
-		}
-	return (uint8_t)(i-1);
+	return i;
 }
-
-void calibration(uint8_t calSw, uint8_t calFlashSlot){			//CALIBRATION v2.0
+//Calibration 2.0
+void calibration(uint8_t calSw, uint8_t calFlashSlot){
 
 //PHASE 1 - Calculating neutral value
 uint32_t 	value32=0, i=0, j=0, neutral32=0, w1=0xFFFFFFFF,w2=0xFFFFFFFF;
-uint16_t 	value16=0, max=0, min=0, count=0, neutralAverage=0, neutralAverageOld=0;
+uint16_t 	value16=0, count=0, neutralAverage=0, neutralAverageOld=0;
+uint16_t  max=0, min=0;
 uint16_t 	w1a=0xFFFF, w1b=0xFFFF, w2a=0xFFFF, w2b=0xFFFF;
 uint8_t		neutralOK=0;
 float			calFactA=0.0, calFactB=0.0;
 
  HAL_Delay(5000);
 
-draw5();
+draw(5);
 
 value16 = getValue();
 
-while (value16<1600 || value16>2400){			//Wait for joystick to be centered
+while (value16<1600 || value16>2400){   //Wait for joystick to be centered
 	value16 = getValue();
 }
 //Step 1.1 - Pull the stick to any corner and let go until neutral is OK
 while (neutralOK<3){
 	count++;
-	while (value16>1500 && value16<2500){			//Wait for joystick to be moved
+	while (value16>1500 && value16<2500){  //Wait for joystick to be moved
 		value16 = getValue();
 	}
 	HAL_Delay(100);
-	while (value16<1600 || value16>2400){			//Wait for joystick to return centered
+	while (value16<1600 || value16>2400){  //Wait for joystick to return centered
 		value16 = getValue();
 	}
-	HAL_Delay(500);														//Wait for spring to stabilize
-	for (i=0; i<16; i++){											//Get neutral value by averaging 16 readings
+	HAL_Delay(500);									//Wait for spring to stabilize
+	for (i=0; i<16; i++){						//Get neutral value by averaging 16 readings
 		value32 = value32 + getValue();
 	}
-	neutral32 = neutral32 + (value32/16);			//Add current neutral reading to pool
-	value32 = 0;									//Reset value32
+	neutral32 = neutral32 + (value32/16);	 //Add current neutral reading to pool
+	value32 = 0;								           //Reset value32
 	neutralAverage = (neutral32/count);
 	if (neutralAverage == neutralAverageOld) neutralOK++;
 	else neutralOK = 0;
 	neutralAverageOld = neutralAverage;
 }
-draw5();
+draw(5);
 //PHASE 2 - Calculating min and max while the stick is rotated
 min = neutralAverage;
 max = neutralAverage;
@@ -433,97 +458,102 @@ w2b = (uint16_t)(calFactB * 10000);
 w1 = ((uint32_t)w1a << 16) + w1b;
 w2 = ((uint32_t)w2a << 16) + w2b;
 writeToFlash(w1, w2, calFlashSlot);
-drawInf();
+draw(-1);
 }
 
-void draw5(void){
-	uint8_t i,j;
-	for (j=0; j<5; j++){
-		for (i=0; i<40; i++){
-			rotateRight(GPIOA_ODR);
-			HAL_Delay(1);
-		}
-		HAL_Delay(500);
-		for (i=0; i<40; i++){
-			rotateLeft(GPIOA_ODR);
-			HAL_Delay(1);
-		}
-		for (i=0; i<40; i++){
-			rotateLeft(GPIOA_ODR);
-			HAL_Delay(1);
-		}
-		HAL_Delay(500);
-		for (i=0; i<40; i++){
-			rotateRight(GPIOA_ODR);
-			HAL_Delay(1);
-		}
-	}
+//Move the cursor in a waving pattern for n times
+void draw(int16_t n){
+	uint8_t  i=0;
+  uint16_t j=0;
+  //if times_to_repeat = -1 loop indefinitely
+  if (n == -1){
+    while(1){
+      for (i=0; i<40; i++){
+  			rotateRight(GPIOA_ODR);
+  			HAL_Delay(1);
+  		}
+  		HAL_Delay(500);
+  		for (i=0; i<40; i++){
+  			rotateLeft(GPIOA_ODR);
+  			HAL_Delay(1);
+  		}
+  		for (i=0; i<40; i++){
+  			rotateLeft(GPIOA_ODR);
+  			HAL_Delay(1);
+  		}
+  		HAL_Delay(500);
+  		for (i=0; i<40; i++){
+  			rotateRight(GPIOA_ODR);
+  			HAL_Delay(1);
+  		}
+    }
+  }
+
+  //otherwise loop n times
+  else {
+  	for (j=0; j<n; j++){
+  		for (i=0; i<40; i++){
+  			rotateRight(GPIOA_ODR);
+  			HAL_Delay(1);
+  		}
+  		HAL_Delay(500);
+  		for (i=0; i<40; i++){
+  			rotateLeft(GPIOA_ODR);
+  			HAL_Delay(1);
+  		}
+  		for (i=0; i<40; i++){
+  			rotateLeft(GPIOA_ODR);
+  			HAL_Delay(1);
+  		}
+  		HAL_Delay(500);
+  		for (i=0; i<40; i++){
+  			rotateRight(GPIOA_ODR);
+  			HAL_Delay(1);
+  		}
+  	}
+  }
 }
 
-void drawInf(void){
-	uint8_t i;
-	while(1){
-		for (i=0; i<40; i++){
-			rotateRight(GPIOA_ODR);
-			HAL_Delay(1);
-		}
-		HAL_Delay(500);
-		for (i=0; i<40; i++){
-			rotateLeft(GPIOA_ODR);
-			HAL_Delay(1);
-		}
-		for (i=0; i<40; i++){
-			rotateLeft(GPIOA_ODR);
-			HAL_Delay(1);
-		}
-		HAL_Delay(500);
-		for (i=0; i<40; i++){
-			rotateRight(GPIOA_ODR);
-			HAL_Delay(1);
-		}
-	}
-}
-
+//Write data into MCU flash memory
 void writeToFlash(uint32_t w1, uint32_t w2, uint8_t calFlashSlot){
 
 	HAL_FLASH_Unlock();
-	while (*FLASH_SR&(1<<16));          			//wait for BSY1 flag to be 0
-	*FLASH_SR = *FLASH_SR & 0x00050000; 			//reset all flash error flags
-	while (*FLASH_SR&(1<<18));          			//wait for CFGBSY1 flag to be 0
-	*FLASH_CR = *FLASH_CR | 0x01; 					//set PG flag
-	*(PAGE15_SLOT1 + (calFlashSlot*2)) = w1;    	//write w1 into Flash
-	__ISB();										//Ensures that the two 32bit words are not merged by compiler
-	*(PAGE15_SLOT1 + (calFlashSlot*2) + 1) = w2;    //write w2 into Flash
-	while (*FLASH_SR&(1<<16));          			//wait for BSY1 flag to be 0
-	while (*FLASH_SR&(1<<18));          			//wait for CFGBSY1 flag to be 0
-	*FLASH_CR = *FLASH_CR & 0xFFFFFFFE;				//reset PG flag
+	while (*FLASH_SR&(1<<16));          			    //wait for BSY1 flag to be 0
+	*FLASH_SR = *FLASH_SR & 0x00050000; 			    //reset all flash error flags
+	while (*FLASH_SR&(1<<18));          			    //wait for CFGBSY1 flag to be 0
+	*FLASH_CR = *FLASH_CR | 0x01; 					      //set PG flag
+	*(PAGE15_SLOT1 + (calFlashSlot*2)) = w1;      //write w1 into Flash
+	__ISB();				//Ensures that the two 32bit words are not merged by compiler
+	*(PAGE15_SLOT1 + (calFlashSlot*2) + 1) = w2;  //write w2 into Flash
+	while (*FLASH_SR&(1<<16));          			    //wait for BSY1 flag to be 0
+	while (*FLASH_SR&(1<<18));          			    //wait for CFGBSY1 flag to be 0
+	*FLASH_CR = *FLASH_CR & 0xFFFFFFFE;			     	//reset PG flag
 	HAL_FLASH_Lock();
 }
 
-void eraseFlash (void){								//Erase pages 30 and 31 in flash memory function
-
-	//__HAL_LOCK(&pFlash); 							//Lock process
+//Erase all data in pages 15 and 16 of MCU flash memory
+void eraseFlash (void){
 	HAL_FLASH_Unlock();
-	while (*FLASH_SR&(1<<16));          			//wait for BSY1 flag to be 0
-	*FLASH_SR = *FLASH_SR & 0x00050000; 			//reset all flash error flags
-	*FLASH_CR = *FLASH_CR & 0xC0000000; 			//reset page erase and number flags
-	*FLASH_CR = *FLASH_CR | 0x7A; 					//set page erase flag and page number 15
-	*FLASH_CR = *FLASH_CR | (1<<16);    			//set start flag
-	while (*FLASH_SR&(1<<16));          			//wait for BSY1 flag to be 0
-	*FLASH_CR = *FLASH_CR & 0xC0000000; 			//reset page erase and number flags
+	while (*FLASH_SR&(1<<16));          	//wait for BSY1 flag to be 0
+	*FLASH_SR = *FLASH_SR & 0x00050000; 	//reset all flash error flags
+	*FLASH_CR = *FLASH_CR & 0xC0000000; 	//reset page erase and number flags
+	*FLASH_CR = *FLASH_CR | 0x7A; 				//set page erase flag and page number 15
+	*FLASH_CR = *FLASH_CR | (1<<16);    	//set start flag
+	while (*FLASH_SR&(1<<16));          	//wait for BSY1 flag to be 0
+	*FLASH_CR = *FLASH_CR & 0xC0000000; 	//reset page erase and number flags
 	HAL_FLASH_Lock();
-	//__HAL_UNLOCK(&pFlash);
 }
 
-uint16_t getValue(void){							//Reads one value from ADC
-
-	uint16_t value;
-	while (!(*ADC_ISR & 1<<3));						//Wait till new value is available from ADC data register
+//Wait till new value is available from ADC data register and read it
+uint16_t getValue(void){
+  uint16_t value;
+	while (!(*ADC_ISR & 1<<3));
 	value = (uint16_t)(*ADC_DR);
 	return value;
 }
 
-void rotateLeft (volatile uint32_t* GPIOA_ODR){		//Simulate an optical disc rotation (LEFT)
+//Simulate an optical disc rotation (LEFT)
+void rotateLeft (volatile uint32_t* GPIOA_ODR){
 	uint8_t result, data;
 	data = (uint8_t)(*(GPIOA_ODR)>>8);
 	if ( data & 1<<7 ){
@@ -534,7 +564,8 @@ void rotateLeft (volatile uint32_t* GPIOA_ODR){		//Simulate an optical disc rota
 	*GPIOA_ODR = (*GPIOA_ODR & 0xFFFF00FF) + ((uint16_t)result << 8);
 }
 
-void rotateRight (volatile uint32_t* GPIOA_ODR){		//Simulate an optical disc rotation (RIGHT)
+//Simulate an optical disc rotation (RIGHT)
+void rotateRight (volatile uint32_t* GPIOA_ODR){
 	uint8_t result, data;
 	data = (uint8_t)(*(GPIOA_ODR)>>8);
 	if ( data & (1<<0) ){
@@ -567,12 +598,12 @@ void Error_Handler(void)
   * @retval None
   */
 void assert_failed(uint8_t *file, uint32_t line)
-{ 
-  /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-     tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-  /* USER CODE END 6 */
+{
+/* USER CODE BEGIN 6 */
+/* User can add his own implementation to report the file name and line number,
+   tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+/* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+/*******************************END OF FILE************************************/
