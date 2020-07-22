@@ -9,6 +9,7 @@ This is what you can find inside the various folders:
 * media:          Images and other media related to ProStick64
 * PCB:            PCB gerber files, KICAD project and libraries
 * render:         STL files of the enclosure and thumbstick
-* source:         Source code of the software. Import the project inside STM32CubeIDE software
+* source:         Source code of the software
 
+Note: if you want to edit the source code I suggest you to import the source folders inside STM32CubeIDE software.
 For any additional info contact me at info@prostick64.com
