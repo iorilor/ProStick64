@@ -2,7 +2,7 @@
 /**
   ******************************************************************************
   * @file           : main.c
-  * @brief          : Main program body for X axis processor
+  * @brief          : Main program body v3 for X axis processor
   ******************************************************************************
   ******************************************************************************
   * All the code OUTSIDE the "USER CODE" blocks is copyrighted as follows:
@@ -91,6 +91,7 @@ volatile uint32_t* FLASH_SR  	  = (uint32_t*)0x40022010;  //MEMORY ADDRESSES
 volatile uint32_t* FLASH_CR  	  = (uint32_t*)0x40022014;
 volatile uint32_t* PAGE15_SLOT1 = (uint32_t*)0x08007800;
 volatile uint32_t* GPIOA_IDR 	  = (uint32_t*)0x50000010;
+volatile uint32_t* GPIOB_IDR 	  = (uint32_t*)0x50000410;
 volatile uint32_t* GPIOA_ODR 	  = (uint32_t*)0x50000014;
 volatile uint32_t* ADC_ISR 		  = (uint32_t*)0x40012400;
 volatile uint32_t* ADC_DR 		  = (uint32_t*)0x40012440;

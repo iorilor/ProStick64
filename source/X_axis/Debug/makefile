@@ -24,24 +24,24 @@ endif
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-ProStick64_X_axis.elf \
+X_axis.elf \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-ProStick64_X_axis.list \
+X_axis.list \
 
 OBJCOPY_BIN += \
-ProStick64_X_axis.bin \
+X_axis.bin \
 
 
 # All Target
-all: ProStick64_X_axis.elf secondary-outputs
+all: X_axis.elf secondary-outputs
 
 # Tool invocations
-ProStick64_X_axis.elf: $(OBJS) $(USER_OBJS) /Volumes/Macintosh\ HD/Utenti/Lorenzo/Documents/N64\ Joy/ProStick64/SOURCE_V2/X_axis/STM32G031J6MX_FLASH.ld
-	arm-none-eabi-gcc -o "ProStick64_X_axis.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0plus -T"/Volumes/Macintosh HD/Utenti/Lorenzo/Documents/N64 Joy/ProStick64/SOURCE_V2/X_axis/STM32G031J6MX_FLASH.ld" --specs=nosys.specs -Wl,-Map="ProStick64_X_axis.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+X_axis.elf: $(OBJS) $(USER_OBJS) /Volumes/Macintosh\ HD/Utenti/Lorenzo/Documents/GitHub/ProStick64/source/X_axis/STM32G031J6MX_FLASH.ld
+	arm-none-eabi-gcc -o "X_axis.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0plus -T"/Volumes/Macintosh HD/Utenti/Lorenzo/Documents/GitHub/ProStick64/source/X_axis/STM32G031J6MX_FLASH.ld" --specs=nosys.specs -Wl,-Map="X_axis.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -50,13 +50,13 @@ default.size.stdout: $(EXECUTABLES)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-ProStick64_X_axis.list: $(EXECUTABLES)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "ProStick64_X_axis.list"
+X_axis.list: $(EXECUTABLES)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "X_axis.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
-ProStick64_X_axis.bin: $(EXECUTABLES)
-	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "ProStick64_X_axis.bin"
+X_axis.bin: $(EXECUTABLES)
+	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "X_axis.bin"
 	@echo 'Finished building: $@'
 	@echo ' '
 
