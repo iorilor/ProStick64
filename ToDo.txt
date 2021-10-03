@@ -1,5 +1,0 @@
-- Fare in modo che le funzioni facciano soltanto quello che dovrebbero fare e lanciare altre funzioni sulla  base dei loro risultati
-
-- Draw(n)
-
-- Ottimizzare la calibrazione, più user friendly
